@@ -244,7 +244,6 @@ resource "aws_route53_record" "record" {
   zone_id = var.zone_id
   name    = join(".", [var.record_name, var.zone_name])
   type    = "A"
-  ttl     = 300
 
   alias {
     name                   = aws_lb.mlflow.dns_name
