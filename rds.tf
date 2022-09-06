@@ -29,6 +29,13 @@ resource "aws_iam_role_policy" "db_secrets" {
           data.aws_secretsmanager_secret_version.db_password.arn,
         ]
       },
+      {
+        Effect = "Allow"
+        Action = [
+          "kms:*",
+        ]
+        "Resource" : "${var.key_arn}"
+      },
     ]
   })
 }

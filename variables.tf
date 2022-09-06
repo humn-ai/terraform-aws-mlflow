@@ -191,3 +191,8 @@ variable "record_name" {
   description = "(Required) - The name of the record MlFlow will use."
   type        = string
 }
+
+variable "key_arn" {
+  description = "(Required) - The KMS key used to encrypt the secrets."
+  type        = string
+}
