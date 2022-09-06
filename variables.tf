@@ -171,3 +171,23 @@ variable "gunicorn_opts" {
   type        = string
   default     = ""
 }
+
+variable "certificate_arn" {
+  description = "(Required) - The ARN of the certificate MlFlow traffic will be encrypted with."
+  type        = string
+}
+
+variable "zone_id" {
+  description = "(Required) - The ID of the hosted zone MlFlow will be hosted at."
+  type        = string
+}
+
+variable "zone_name" {
+  description = "(Required) - The name of the hosted zone MlFlow will be hosted at."
+  type        = string
+}
+
+variable "record_name" {
+  description = "(Required) - The name of the record MlFlow will use."
+  type        = string
+}

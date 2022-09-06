@@ -139,7 +139,8 @@ resource "aws_ecs_service" "mlflow" {
   }
 
   depends_on = [
-    aws_lb.mlflow,
+    aws_lb_listener.http,
+    aws_lb_listener.https
   ]
 }
 
@@ -210,3 +211,44 @@ resource "aws_lb_target_group" "mlflow" {
   }
 }
 
+resource "aws_lb_listener" "https" {
+  load_balancer_arn = aws_lb.mlflow.arn
+  port              = "443"
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = var.certificate_arn
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.mlflow.arn
+  }
+}
+
+resource "aws_lb_listener" "http" {
+  load_balancer_arn = aws_lb.mlflow.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type = "fixed-response"
+
+    fixed_response {
+      content_type = "text/plain"
+      message_body = ""
+      status_code  = "404"
+    }
+  }
+}
+
+resource "aws_route53_record" "record" {
+  zone_id = var.zone_id
+  name    = join(".", [var.record_name, var.zone_name])
+  type    = "A"
+  ttl     = 300
+
+  alias {
+    name                   = aws_lb.mlflow.dns_name
+    zone_id                = aws_lb.mlflow.zone_id
+    evaluate_target_health = true
+  }
+}
