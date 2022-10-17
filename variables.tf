@@ -196,3 +196,9 @@ variable "key_arn" {
   description = "(Required) - The KMS key used to encrypt the secrets."
   type        = string
 }
+
+variable "rds_cluster_engine_version" {
+  description = "AWS RDS cluster engine version"
+  type        = string
+  default     = "5.7.mysql_aurora.2.08.3"
+ }
