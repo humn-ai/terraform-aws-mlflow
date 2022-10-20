@@ -201,4 +201,35 @@ variable "rds_cluster_engine_version" {
   description = "AWS RDS cluster engine version"
   type        = string
   default     = "5.7.mysql_aurora.2.08.3"
- }
+}
+
+variable "aws_cognito_user_pool_arn" {
+  description = "(Required) - AWS Cognito user pool arn"
+  type        = string
+}
+
+variable "aws_cognito_user_pool_client_id" {
+  description = "(Required) - AWS Cognito user pool client id"
+  type        = string
+}
+
+variable "aws_cognito_user_pool_domain" {
+  description = "(Required) - AWS Cognito user pool domain"
+  type        = string
+}
+
+variable "api_zone_id" {
+  description = "(Required) - The ID of the hosted zone MlFlow api access will be hosted at."
+  type        = string
+}
+
+variable "api_zone_name" {
+  description = "(Required) - The name of the hosted zone MlFlow api access will be hosted at."
+  type        = string
+}
+
+
+variable "api_cert_arn" {
+  description = "(Required) - The ARN of AMC for api dns zone"
+  type        = string
+}
