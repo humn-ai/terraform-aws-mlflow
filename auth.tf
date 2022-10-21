@@ -104,10 +104,20 @@ resource "aws_apigatewayv2_stage" "default" {
 }
 
 resource "aws_apigatewayv2_route" "default" {
-  api_id    = aws_apigatewayv2_api.mlflow.id
-  route_key = "$default"
+  api_id             = aws_apigatewayv2_api.mlflow.id
+  route_key          = "$default"
+  authorization_type = "CUSTOM"
+  authorizer_id      = aws_apigatewayv2_authorizer.lambda.id
+  target             = "integrations/${aws_apigatewayv2_integration.mlflow.id}"
+}
 
-  target = "integrations/${aws_apigatewayv2_integration.mlflow.id}"
+resource "aws_apigatewayv2_authorizer" "lambda" {
+  name                              = "MLflow-lambda-auth"
+  api_id                            = aws_apigatewayv2_api.mlflow.id
+  authorizer_type                   = "REQUEST"
+  authorizer_payload_format_version = "1.0"
+  authorizer_uri                    = aws_lambda_function.mlflow.invoke_arn
+  identity_sources                  = ["$request.header.Authorization"]
 }
 
 resource "aws_apigatewayv2_integration" "mlflow" {
