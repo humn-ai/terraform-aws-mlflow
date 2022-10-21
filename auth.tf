@@ -81,15 +81,10 @@ resource "aws_apigatewayv2_api" "mlflow" {
   protocol_type = "HTTP"
 }
 
-resource "aws_apigatewayv2_stage" "mlflow" {
-  api_id = aws_apigatewayv2_api.mlflow.id
-  name   = "$default"
-}
-
 resource "aws_apigatewayv2_api_mapping" "mlflow" {
   api_id      = aws_apigatewayv2_api.mlflow.id
   domain_name = aws_apigatewayv2_domain_name.mlflow.id
-  stage       = aws_apigatewayv2_stage.mlflow.id
+  stage       = aws_apigatewayv2_stage.default.id
 }
 
 resource "aws_apigatewayv2_domain_name" "mlflow" {
@@ -100,6 +95,36 @@ resource "aws_apigatewayv2_domain_name" "mlflow" {
     endpoint_type   = "REGIONAL"
     security_policy = "TLS_1_2"
   }
+}
+
+resource "aws_apigatewayv2_stage" "default" {
+  api_id      = aws_apigatewayv2_api.mlflow.id
+  name        = "$default"
+  auto_deploy = true
+}
+
+resource "aws_apigatewayv2_route" "default" {
+  api_id    = aws_apigatewayv2_api.mlflow.id
+  route_key = "$default"
+
+  target = "integrations/${aws_apigatewayv2_integration.mlflow.id}"
+}
+
+resource "aws_apigatewayv2_integration" "mlflow" {
+  api_id           = aws_apigatewayv2_api.mlflow.id
+  integration_type = "HTTP_PROXY"
+
+  connection_type    = "VPC_LINK"
+  connection_id      = aws_apigatewayv2_vpc_link.mlflow.id
+  integration_method = "ANY"
+  integration_uri    = aws_lb_listener.http.arn
+}
+
+resource "aws_apigatewayv2_vpc_link" "mlflow" {
+  name               = "MLflow-vpc-link"
+  security_group_ids = [aws_security_group.lb.id]
+  subnet_ids         = var.database_subnet_ids
+
 }
 
 resource "aws_route53_record" "api" {
@@ -114,3 +139,36 @@ resource "aws_route53_record" "api" {
   }
 
 }
+
+#Lambda function for auth via api-gateway
+resource "aws_lambda_function" "mlflow" {
+  filename      = "${path.module}/src/MLflow-custom-authorizer.zip"
+  function_name = "MLflow-custom-authorizer"
+  role          = aws_iam_role.lambda.arn
+  handler       = "index.handler"
+  runtime       = "nodejs16.x"
+}
+
+resource "aws_iam_role" "lambda" {
+  name = "mlflow-custom-authorizer-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "lambda" {
+  role       = aws_iam_role.lambda.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
