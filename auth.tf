@@ -75,6 +75,17 @@ resource "aws_lb_listener_rule" "http" {
 
 }
 
+resource "aws_security_group_rule" "lb_egress_idp" {
+  description       = "Open 443 outbound for idp access"
+  type              = "egress"
+  from_port         = "443"
+  to_port           = "443"
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.lb.id
+}
+
+
 # api endpoint configuration
 resource "aws_apigatewayv2_api" "mlflow" {
   name          = "MLflow"
