@@ -1,0 +1,59 @@
+name: Generate README
+on:
+  push:
+    branches:
+      - "main"
+
+jobs:
+  docs:
+    runs-on: humnai-runner
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v3
+
+      - name: Configure Git
+        run: |
+          git config user.name "humnrw"
+          git config user.email "humnrw@humn.ai"
+
+      - name: Create new branch
+        run: git pull
+
+      - name: Install gomplate
+        uses: teaxyz/setup@v0
+        with:
+          +: |
+            gomplate.ca^3.11.4
+
+      - name: Download template file
+        run: wget --no-check-certificate -O README.md.gotmpl --content-disposition https://raw.githubusercontent.com/humn-ai/readme-builders/main/terraform-module.gotmpl
+
+      - name: Run gomplate
+        run: gomplate --file README.md.gotmpl --config docs/README.yaml --out README.md
+
+      - name: Delete template file
+        run: rm README.md.gotmpl
+
+      - name: Render terraform docs
+        uses: terraform-docs/gh-actions@v1.0.0
+        with:
+          working-dir: .
+          output-file: README.md
+          output-method: inject
+          git-push: true
+          git-commit-message: "chore: Update documentation [skip ci]"
+
+      - name: Perform git pull
+        run: git pull
+
+      - name: Update contributors README section
+        uses: BobAnkh/add-contributors@master
+        with:
+          CONTRIBUTOR: "## 🥳 Contributors"
+          COLUMN_PER_ROW: "6"
+          ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMG_WIDTH: "100"
+          FONT_SIZE: "14"
+          PATH: "/README.md"
+          COMMIT_MESSAGE: "chore: update contributors [skip ci]"
+          AVATAR_SHAPE: "round"
