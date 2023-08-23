@@ -1,0 +1,79 @@
+---
+#
+# This is the canonical configuration for the `README.md`
+# Run `make readme` to rebuild the `README.md`
+#
+
+# Name of this project
+name: tf-mod-aws-mlflow
+
+slack_link: https://humncloud.slack.com/archives/CUT6GL4E9
+github_repo: https://github.com/humn-ai/tf-mod-aws-mlflow
+
+help: true
+contributors: true
+
+introduction: |-
+  This terraform module allows you to deploy a cluster of MLflow servers + UI using:
+
+  - ECS Fargate as the compute engine
+  - Amazon Aurora Serverless as the backend store
+  - S3 as the default artifact root
+
+  ## 👨‍🎨 Design principles
+
+    When designing this module, we've made some decisions about technologies and configuration that might not apply to all use cases. In doing so, we've applied the following principles, in this order:
+
+    - __High availability and recovery__. All components are meant to be highly available and provide backups so that important data can be recovered in case of a failure. Database back-ups are activated, and versioning is enabled for the S3 bucket.
+    - __Least privilege__. We've created dedicated security groups and IAM roles, and restricted traffic/permissions to the minimum necessary to run MLflow.
+    - __Smallest maintenance overhead__. We've chosen serverless technologies like Fargate and Aurora Serverless to minimize the cost of ownership of an MLflow cluster.
+    - __Smallest cost overhead__. We've tried to choose technologies that minimize costs, under the assumption that MLflow will be an internal tool that is used during working hours, and with a very lightweight use of the database.
+    - __Private by default__. As of version 1.9.1, MLflow doesn't provide native authentication/authorization mechanisms. When using the default values, the module will create resources that are not exposed to the Internet. Moreover, the module provides server-side encryption for the S3 bucket and the database through different KMS keys.
+    - __Flexibility__. Where possible, we've tried to make this module usable under different circumstances. For instance, you can use it to deploy MLflow to a private VPN and access it within a VPN, or you can leverage ALB's integration with Cognito/OIDC to allow users to access MLflow from your SSO solution.
+
+    ## 🏗️ Architecture
+
+    The following diagram illustrates the components the module creates with the default configuration:
+
+    ![Architecture Diagram](docs/diagrams/architecture.png)
+
+# How to use this module
+usage: |-
+  To use this module, you can simply:
+
+  ```hcl
+  module "mlflow" {
+    source  = "glovo/mlflow/aws"
+    version = "1.0.0"
+
+    unique_name                       = "mlflow-team-x"
+    vpc_id                            = "my-vpc"
+    load_balancer_subnet_ids          = ["public-subnet-az-1", "public-subnet-az-2", "public-subnet-az-3"]
+    load_balancer_ingress_cidr_blocks = ["192.0.2.0/24"]
+    service_subnet_ids                = ["private-subnet-az-1", "private-subnet-az-2", "private-subnet-az-3"]
+    database_subnet_ids               = ["db-private-subnet-az-1", "db-private-subnet-az-2", "db-private-subnet-az-3"]
+    database_password_secret_arn      = "mlflow-team-x-db-password-arn"
+  }
+  ```
+
+  You can find a more complete usage example in [`terratest/examples/main.tf`](terratest/examples/main.tf).
+
+  Note you may also:
+
+  - Add sidecar containers (e.g. a [datadog agent for Fargate](https://www.datadoghq.com/blog/monitor-aws-fargate/))
+  - Provide your own bucket/path as the default artifact root
+  - Attach an autoscaling policy to the service (for instance, you may scale down to 0 instances during the night)
+
+# description: |-
+#   Provide a description of the module here.
+
+# quickstart: |-
+#   Provide a quick-start guide here.
+
+# examples: |-
+#   Provide some examples of how to use the code here.
+
+related:
+  name: terraform-aws-mlflow
+  url: https://github.com/larribas/terraform-aws-mlflow
+  description: The upstream fork of this repository
